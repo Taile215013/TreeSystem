@@ -138,24 +138,24 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
       {/* Main Workspace */}
       <div className="space-y-6">
         {/* Step Indicator Header */}
-        <div className="flex items-center gap-3 p-1.5 bg-zinc-900/80 border border-white/5 rounded-2xl backdrop-blur-md mb-4 w-fit">
+        <div className="flex items-center gap-3 p-1.5 bg-pink-100/80 border border-pink-200 rounded-2xl backdrop-blur-md mb-4 w-fit">
           <div
             onClick={() => setStep('general')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer ${step === 'general' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer ${step === 'general' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-pink-500 hover:text-pink-700'}`}
           >
             <CalendarIcon size={18} /> <span className="text-sm font-bold">Thông tin chung</span>
           </div>
-          <div className="w-6 h-px bg-zinc-800" />
+          <div className="w-6 h-px bg-pink-200" />
           <div
             onClick={() => setStep('products')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer ${step === 'products' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-zinc-500 hover:text-zinc-300'}`}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all cursor-pointer ${step === 'products' ? 'bg-primary text-primary-foreground shadow-lg' : 'text-pink-500 hover:text-pink-700'}`}
           >
             <ShoppingBag size={18} /> <span className="text-sm font-bold">Sản phẩm</span>
           </div>
         </div>
 
         {step === 'general' && (
-          <Card className="bg-zinc-950 border-white/5 shadow-2xl overflow-hidden rounded-3xl">
+          <Card className="bg-pink-50 border-pink-200 shadow-2xl overflow-hidden rounded-3xl">
             <div className="h-1.5 bg-primary w-full" />
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-primary"><Info size={20} /> Thiết lập phiếu nhập</CardTitle>
@@ -163,20 +163,20 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
             <CardContent className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-zinc-400">Mã phiếu (Tự động)</Label>
+                  <Label className="text-pink-700">Mã phiếu (Tự động)</Label>
                   <Input
-                    className="bg-zinc-900 border-white/10 focus:border-primary/50 rounded-xl"
+                    className="bg-white border-pink-200 focus:border-primary/50 rounded-xl text-zinc-900"
                     value={receiptCode}
                     onChange={(e) => setReceiptCode(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-zinc-400 flex items-center gap-2"><MapPin size={14} /> Vị trí nhập kho</Label>
+                  <Label className="text-pink-700 flex items-center gap-2"><MapPin size={14} /> Vị trí nhập kho</Label>
                   <Select value={locationId} onValueChange={setLocationId}>
-                    <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl">
+                    <SelectTrigger className="bg-white border-pink-200 text-zinc-900 rounded-xl">
                       <SelectValue placeholder="Chọn kho..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 text-white border-white/10">
+                    <SelectContent className="bg-white text-zinc-900 border-pink-200">
                       {initialData.locations.map(loc => (
                         <SelectItem key={loc.id} value={loc.id.toString()}>{loc.name}</SelectItem>
                       ))}
@@ -187,26 +187,26 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-zinc-400">Ngày nhập kho</Label>
+                  <Label className="text-pink-700">Ngày nhập kho</Label>
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="w-full bg-zinc-900 border-white/10 justify-start text-left text-zinc-300 rounded-xl">
+                      <Button variant="outline" className="w-full bg-white border-pink-200 justify-start text-left text-zinc-700 rounded-xl">
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {date ? format(date, "EEEE, dd/MM/yyyy", { locale: vi }) : "Chọn ngày"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="bg-zinc-900 border-white/10 text-white p-0">
+                    <PopoverContent className="bg-white border-pink-200 text-zinc-900 p-0">
                       <Calendar mode="single" selected={date} onSelect={setDate} />
                     </PopoverContent>
                   </Popover>
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-zinc-400">Nhà cung cấp chính (Tùy chọn)</Label>
+                  <Label className="text-pink-700">Nhà cung cấp chính (Tùy chọn)</Label>
                   <Select value={supplierId} onValueChange={setSupplierId}>
-                    <SelectTrigger className="bg-zinc-900 border-white/10 text-white rounded-xl">
+                    <SelectTrigger className="bg-white border-pink-200 text-zinc-900 rounded-xl">
                       <SelectValue placeholder="Chọn NCC..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-zinc-900 text-white border-white/10">
+                    <SelectContent className="bg-white text-zinc-900 border-pink-200">
                       <SelectItem value="0">--- Trống ---</SelectItem>
                       {initialData.suppliers.map(s => (
                         <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
@@ -216,24 +216,24 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
                 </div>
               </div>
 
-              <Separator className="bg-white/5" />
+              <Separator className="bg-pink-200/50" />
 
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label className="text-zinc-400 flex items-center gap-2"><Truck size={14} /> Tiền vận chuyển (VNĐ)</Label>
+                  <Label className="text-pink-700 flex items-center gap-2"><Truck size={14} /> Tiền vận chuyển (VNĐ)</Label>
                   <Input
                     type="number"
-                    className="bg-zinc-900 border-white/10 focus:border-primary/50 rounded-xl"
+                    className="bg-white border-pink-200 focus:border-primary/50 rounded-xl text-zinc-900"
                     placeholder="0"
                     value={shippingCost}
                     onChange={(e) => setShippingCost(Number(e.target.value))}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-zinc-400 flex items-center gap-2"><Users size={14} /> Tiền nhân công (VNĐ)</Label>
+                  <Label className="text-pink-700 flex items-center gap-2"><Users size={14} /> Tiền nhân công (VNĐ)</Label>
                   <Input
                     type="number"
-                    className="bg-zinc-900 border-white/10 focus:border-primary/50 rounded-xl"
+                    className="bg-white border-pink-200 focus:border-primary/50 rounded-xl text-zinc-900"
                     placeholder="0"
                     value={laborCost}
                     onChange={(e) => setLaborCost(Number(e.target.value))}
@@ -242,9 +242,9 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-zinc-400">Ghi chú phiếu nhập</Label>
+                <Label className="text-pink-700">Ghi chú phiếu nhập</Label>
                 <textarea
-                  className="w-full bg-zinc-900 border border-white/10 rounded-xl p-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  className="w-full bg-white border border-pink-200 rounded-xl p-3 text-sm text-zinc-900 focus:outline-none focus:ring-2 focus:ring-primary/50"
                   rows={3}
                   placeholder="Nhập nội dung ghi chú..."
                   value={notes}
@@ -256,8 +256,8 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
         )}
 
         {step === 'products' && (
-          <Card className="bg-zinc-950 border-white/5 shadow-2xl rounded-3xl overflow-hidden">
-            <CardHeader className="flex flex-row items-center justify-between border-b border-white/5 bg-zinc-900/30">
+          <Card className="bg-pink-50 border-pink-200 shadow-2xl rounded-3xl overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between border-b border-pink-200 bg-pink-100/30">
               <CardTitle className="flex items-center gap-2 text-primary"><Leaf size={20} /> Chi tiết hoa kiểng</CardTitle>
               <Button onClick={addItem} className="bg-primary hover:bg-primary/90 rounded-xl">
                 <Plus size={16} className="mr-2" /> Thêm dòng mới
@@ -265,30 +265,30 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
             </CardHeader>
             <CardContent className="p-0 overflow-x-auto">
               <Table>
-                <TableHeader className="bg-zinc-900/50">
-                  <TableRow className="border-white/5 hover:bg-transparent">
-                    <TableHead className="text-zinc-400 text-xs">Sản phẩm</TableHead>
-                    <TableHead className="text-zinc-400 text-xs text-center w-24">SL</TableHead>
-                    <TableHead className="text-zinc-400 text-xs w-24">ĐVT</TableHead>
-                    <TableHead className="text-zinc-400 text-xs text-right">Giá nhập</TableHead>
-                    <TableHead className="text-zinc-400 text-xs text-right">Giá Min</TableHead>
-                    <TableHead className="text-zinc-400 text-xs text-right">Giá Max</TableHead>
-                    <TableHead className="text-zinc-400 text-xs">Ghi chú</TableHead>
+                <TableHeader className="bg-pink-100/50">
+                  <TableRow className="border-pink-200 hover:bg-transparent">
+                    <TableHead className="text-pink-800 text-xs">Sản phẩm</TableHead>
+                    <TableHead className="text-pink-800 text-xs text-center w-24">SL</TableHead>
+                    <TableHead className="text-pink-800 text-xs w-24">ĐVT</TableHead>
+                    <TableHead className="text-pink-800 text-xs text-right">Giá nhập</TableHead>
+                    <TableHead className="text-pink-800 text-xs text-right">Giá Min</TableHead>
+                    <TableHead className="text-pink-800 text-xs text-right">Giá Max</TableHead>
+                    <TableHead className="text-pink-800 text-xs">Ghi chú</TableHead>
                     <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {items.map((item) => (
-                    <TableRow key={item.id} className="border-white/5 hover:bg-white/[0.02]">
+                    <TableRow key={item.id} className="border-pink-100 hover:bg-pink-100/20">
                       <TableCell>
                         <Select
                           value={item.productId.toString()}
                           onValueChange={(val) => updateItem(item.id, 'productId', Number(val))}
                         >
-                          <SelectTrigger className="bg-zinc-900 border-none w-[180px] text-white rounded-lg">
+                          <SelectTrigger className="bg-white border-pink-100 w-[180px] text-zinc-900 rounded-lg">
                             <SelectValue placeholder="Chọn cây..." />
                           </SelectTrigger>
-                          <SelectContent className="bg-zinc-900 text-white border-white/10">
+                          <SelectContent className="bg-white text-zinc-900 border-pink-200">
                             {initialData.products.map(p => (
                               <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
                             ))}
@@ -298,7 +298,7 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
                       <TableCell>
                         <Input
                           type="number"
-                          className="w-20 mx-auto bg-zinc-900 border-white/5 text-white rounded-lg text-center"
+                          className="w-20 mx-auto bg-white border-pink-100 text-zinc-900 rounded-lg text-center"
                           value={item.quantity}
                           onChange={(e) => updateItem(item.id, 'quantity', Number(e.target.value))}
                         />
@@ -306,7 +306,7 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
                       <TableCell>
                         <Input
                           placeholder="..."
-                          className="w-20 bg-zinc-900 border-white/5 text-white text-xs rounded-lg"
+                          className="w-20 bg-white border-pink-100 text-zinc-900 text-xs rounded-lg"
                           value={item.unit || ""}
                           onChange={(e) => updateItem(item.id, 'unit', e.target.value)}
                         />
@@ -314,7 +314,7 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
                       <TableCell className="text-right">
                         <Input
                           type="number"
-                          className="w-28 ml-auto bg-zinc-900 border-white/5 text-right font-mono text-primary rounded-lg"
+                          className="w-28 ml-auto bg-white border-pink-100 text-right font-mono text-primary rounded-lg"
                           value={item.importPrice}
                           onChange={(e) => updateItem(item.id, 'importPrice', Number(e.target.value))}
                         />
@@ -322,7 +322,7 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
                       <TableCell className="text-right">
                         <Input
                           type="number"
-                          className="w-28 ml-auto bg-zinc-900 border-white/5 text-right font-mono text-[var(--complementary)] rounded-lg"
+                          className="w-28 ml-auto bg-white border-pink-100 text-right font-mono text-[var(--complementary)] rounded-lg"
                           value={item.minPrice}
                           onChange={(e) => updateItem(item.id, 'minPrice', Number(e.target.value))}
                         />
@@ -330,7 +330,7 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
                       <TableCell className="text-right">
                         <Input
                           type="number"
-                          className="w-28 ml-auto bg-zinc-900 border-white/5 text-right font-mono text-sky-400 rounded-lg"
+                          className="w-28 ml-auto bg-white border-pink-100 text-right font-mono text-sky-600 rounded-lg"
                           value={item.maxPrice}
                           onChange={(e) => updateItem(item.id, 'maxPrice', Number(e.target.value))}
                         />
@@ -338,7 +338,7 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
                       <TableCell>
                         <Input
                           placeholder="..."
-                          className="w-16 bg-zinc-900 border-white/5 text-white text-[10px] rounded-lg"
+                          className="w-16 bg-white border-pink-100 text-zinc-900 text-[10px] rounded-lg"
                           value={item.notes || ""}
                           onChange={(e) => updateItem(item.id, 'notes', e.target.value)}
                         />
@@ -348,7 +348,7 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
                           variant="ghost"
                           size="icon"
                           onClick={() => removeItem(item.id)}
-                          className="text-zinc-600 hover:text-red-500 rounded-lg"
+                          className="text-pink-400 hover:text-red-500 rounded-lg"
                         >
                           <Trash2 size={14} />
                         </Button>
@@ -364,19 +364,19 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
 
       {/* Footer Summary Card */}
       <div className="space-y-4">
-        <Card className="bg-zinc-900/50 border-white/5 backdrop-blur-xl rounded-3xl overflow-hidden">
+        <Card className="bg-pink-100/50 border-pink-200 backdrop-blur-xl rounded-3xl overflow-hidden">
           <div className="p-6 md:p-8 flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="flex flex-wrap gap-8 items-center">
               <div className="space-y-1">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Tiền hàng</span>
-                <p className="text-xl font-mono text-white">{totalProductCost.toLocaleString()}đ</p>
+                <span className="text-[10px] font-bold text-pink-600 uppercase tracking-widest">Tiền hàng</span>
+                <p className="text-xl font-mono text-zinc-900">{totalProductCost.toLocaleString()}đ</p>
               </div>
-              <div className="h-8 w-px bg-white/5 hidden md:block" />
+              <div className="h-8 w-px bg-pink-200 hidden md:block" />
               <div className="space-y-1">
-                <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Vận chuyển & Công</span>
-                <p className="text-xl font-mono text-zinc-300">+{(Number(shippingCost) + Number(laborCost)).toLocaleString()}đ</p>
+                <span className="text-[10px] font-bold text-pink-600 uppercase tracking-widest">Vận chuyển & Công</span>
+                <p className="text-xl font-mono text-pink-800">+{(Number(shippingCost) + Number(laborCost)).toLocaleString()}đ</p>
               </div>
-              <div className="h-8 w-px bg-white/5 hidden md:block" />
+              <div className="h-8 w-px bg-pink-200 hidden md:block" />
               <div className="space-y-1">
                 <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Tổng cộng</span>
                 <p className="text-3xl font-black text-primary font-mono">{finalTotal.toLocaleString()}đ</p>
@@ -401,7 +401,7 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
                   >
                     {isSubmitting ? <Loader2 className="animate-spin mr-2" /> : "Xác nhận nhập kho"}
                   </Button>
-                  <Button variant="ghost" className="text-zinc-500 hover:text-white" onClick={() => setStep('general')}>
+                  <Button variant="ghost" className="text-pink-600 hover:text-pink-900" onClick={() => setStep('general')}>
                     <ArrowLeft size={16} className="mr-2" /> Quay lại thiết lập
                   </Button>
                 </div>
@@ -415,7 +415,7 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
               )}
             </div>
           </div>
-          <div className="bg-primary/5 p-3 px-8 text-[10px] text-primary/60 italic flex items-center gap-2 border-t border-white/5">
+          <div className="bg-pink-100/30 p-3 px-8 text-[10px] text-pink-700/60 italic flex items-center gap-2 border-t border-pink-200">
             <Info size={14} />
             Lưu ý: Mọi thay đổi về giá nhập sẽ được hệ thống cập nhật tự động vào giá thị trường hiện tại.
           </div>

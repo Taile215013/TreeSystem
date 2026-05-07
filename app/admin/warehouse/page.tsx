@@ -22,18 +22,18 @@ export default async function WarehousePage() {
                 WMS Pro v2.0
               </Badge>
               <div className="h-1 w-1 rounded-full bg-[var(--complementary)] animate-pulse" />
-              <span className="text-[10px] text-zinc-500 font-bold tracking-widest uppercase">Warehouse Intel</span>
+              <span className="text-[10px] text-pink-500 font-bold tracking-widest uppercase">Warehouse Intel</span>
             </div>
-            <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900 dark:text-white">
+            <h1 className="text-4xl font-extrabold tracking-tight text-zinc-900">
               Quản lý <span className="text-primary">Nhập Kho</span>
             </h1>
-            <p className="text-zinc-500 dark:text-zinc-400 max-w-lg text-sm leading-relaxed">
+            <p className="text-pink-600 max-w-lg text-sm leading-relaxed">
               Khởi tạo phiếu nhập, điều phối vị trí lưu trữ và quản lý chi phí vận hành thông minh trong một giao diện tập trung.
             </p>
           </div>
 
           <div className="hidden lg:block text-right">
-            <div className="text-zinc-400 text-[10px] font-bold uppercase tracking-widest mb-1">Hệ thống</div>
+            <div className="text-pink-400 text-[10px] font-bold uppercase tracking-widest mb-1">Hệ thống</div>
             <div className="flex items-center gap-2 justify-end text-primary font-bold text-xs">
               <div className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px_rgba(var(--primary),0.5)]" />
               Database Connected
@@ -48,9 +48,9 @@ export default async function WarehousePage() {
                <div className="h-7 w-7 rounded-xl bg-primary/15 flex items-center justify-center text-primary">
                  <div className="h-1.5 w-1.5 rounded-full bg-primary" />
                </div>
-               <h2 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest">Tạo Phiếu Nhập Mới</h2>
+               <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-widest">Tạo Phiếu Nhập Mới</h2>
             </div>
-            <div className="bg-white/70 dark:bg-card/40 backdrop-blur-sm border border-border/50 rounded-3xl shadow-xl dark:shadow-none p-1">
+            <div className="bg-pink-100/50 backdrop-blur-sm border border-pink-200 rounded-3xl shadow-xl p-1">
               <WarehouseForm initialData={initialData} />
             </div>
           </div>
@@ -58,7 +58,7 @@ export default async function WarehousePage() {
           {/* History Section */}
           <div className="xl:col-span-4 2xl:col-span-3 space-y-6">
             <div className="flex items-center gap-2 px-2">
-               <h2 className="text-sm font-bold text-zinc-900 dark:text-white uppercase tracking-widest">Lịch sử gần đây</h2>
+               <h2 className="text-sm font-bold text-zinc-900 uppercase tracking-widest">Lịch sử gần đây</h2>
                <div className="ml-auto px-2 py-0.5 rounded-full bg-[var(--complementary)]/10 text-[var(--complementary)] text-[10px] font-bold">Live</div>
             </div>
             <WarehouseHistory history={history} />
