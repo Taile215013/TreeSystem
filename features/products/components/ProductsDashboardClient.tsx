@@ -36,30 +36,26 @@ export function ProductsDashboardClient({ allProducts, isAdmin }: ProductsDashbo
     // Quét thiếu ảnh
     const missingImageProducts = allProducts.filter(p => !p.imageUrl);
     if (missingImageProducts.length > 0) {
-      missingImageProducts.forEach(p => {
-        addNotification({
-          id: `missing-image-${p.id}`,
-          type: "warning",
-          title: "Thiếu hình ảnh",
-          description: `Sản phẩm "${p.name}" chưa có hình ảnh. Cần bổ sung để hiển thị tốt hơn.`,
-          elementId: `product-${p.id}`,
-          action: { label: "Sửa ngay", onClick: () => {} },
-        });
+      addNotification({
+        id: `missing-image-group`,
+        type: "warning",
+        title: `Thiếu hình ảnh (${missingImageProducts.length})`,
+        description: `Có ${missingImageProducts.length} sản phẩm chưa có hình ảnh. Nhấn để làm nổi bật tất cả.`,
+        elementIds: missingImageProducts.map(p => `product-${p.id}`),
+        action: { label: "Xem chi tiết", onClick: () => {} },
       });
     }
 
     // Quét thiếu danh mục
     const missingCategoryProducts = allProducts.filter(p => !p.categoryId);
     if (missingCategoryProducts.length > 0) {
-      missingCategoryProducts.forEach(p => {
-        addNotification({
-          id: `missing-category-${p.id}`,
-          type: "error",
-          title: "Thiếu danh mục",
-          description: `Sản phẩm "${p.name}" chưa được phân loại vào danh mục nào.`,
-          elementId: `product-${p.id}`,
-          action: { label: "Kiểm tra", onClick: () => {} },
-        });
+      addNotification({
+        id: `missing-category-group`,
+        type: "error",
+        title: `Thiếu danh mục (${missingCategoryProducts.length})`,
+        description: `Có ${missingCategoryProducts.length} sản phẩm chưa được phân loại vào danh mục nào.`,
+        elementIds: missingCategoryProducts.map(p => `product-${p.id}`),
+        action: { label: "Kiểm tra", onClick: () => {} },
       });
     }
   }, [allProducts, addNotification]);

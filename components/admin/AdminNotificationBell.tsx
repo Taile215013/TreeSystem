@@ -9,6 +9,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function AdminNotificationBell() {
   const { notifications, clearNotifications } = useAdminNotification();
@@ -20,22 +21,34 @@ export function AdminNotificationBell() {
       notification.action.onClick();
     }
     
-    // Scroll and highlight element if elementId is provided
-    if (notification.elementId) {
-      const el = document.getElementById(notification.elementId);
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-        
-        // Add a highlight class temporarily (red/amber depending on type)
-        const highlightClass = notification.type === 'error' ? 'ring-red-500' 
-                             : notification.type === 'warning' ? 'ring-amber-500' 
-                             : 'ring-primary';
-                             
-        el.classList.add("ring-2", "ring-offset-2", "ring-offset-background", highlightClass, "animate-pulse", "transition-all", "duration-500");
-        setTimeout(() => {
-          el.classList.remove("ring-2", "ring-offset-2", "ring-offset-background", highlightClass, "animate-pulse", "transition-all", "duration-500");
-        }, 3000);
+    // Combine elementId and elementIds for processing
+    const idsToHighlight = [];
+    if (notification.elementId) idsToHighlight.push(notification.elementId);
+    if (notification.elementIds && notification.elementIds.length > 0) {
+      idsToHighlight.push(...notification.elementIds);
+    }
+
+    if (idsToHighlight.length > 0) {
+      // Scroll to the first element
+      const firstEl = document.getElementById(idsToHighlight[0]);
+      if (firstEl) {
+        firstEl.scrollIntoView({ behavior: "smooth", block: "center" });
       }
+
+      // Highlight all elements
+      const highlightClass = notification.type === 'error' ? 'ring-red-500' 
+                           : notification.type === 'warning' ? 'ring-amber-500' 
+                           : 'ring-primary';
+
+      idsToHighlight.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.classList.add("ring-2", "ring-offset-2", "ring-offset-background", highlightClass, "animate-pulse", "transition-all", "duration-500");
+          setTimeout(() => {
+            el.classList.remove("ring-2", "ring-offset-2", "ring-offset-background", highlightClass, "animate-pulse", "transition-all", "duration-500");
+          }, 3000);
+        }
+      });
     }
 
     setOpen(false);
@@ -77,13 +90,42 @@ export function AdminNotificationBell() {
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0 shadow-xl border-border/50 bg-background/95 backdrop-blur-xl rounded-2xl overflow-hidden">
-        <div className="flex items-center justify-between border-b border-border/10 bg-muted/30 px-4 py-3">
-          <h3 className="font-semibold text-sm">Thông báo trang</h3>
+      <PopoverContent 
+        align="end" 
+        sideOffset={8}
+        className="w-[360px] p-0 shadow-2xl border-border/40 bg-background/80 backdrop-blur-3xl rounded-2xl overflow-hidden data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-4"
+      >
+        <div className="flex items-center justify-between border-b border-border/10 bg-gradient-to-r from-muted/50 to-muted/10 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <h3 className="font-bold text-sm bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
+              Thông báo
+            </h3>
+            
+            <TooltipProvider delayDuration={100}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button className="h-5 w-5 rounded-full flex items-center justify-center bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
+                    <Info className="h-3.5 w-3.5" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="w-64 p-3 bg-zinc-900 border-zinc-800 text-zinc-300 shadow-2xl z-[100]">
+                  <p className="text-xs font-bold text-white mb-2">Phân loại lỗi</p>
+                  <div className="space-y-2 text-[11px]">
+                    <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-red-500" /> <span><b className="text-red-400">Đỏ:</b> Lỗi nghiêm trọng (Thiếu dữ liệu bắt buộc)</span></div>
+                    <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-amber-500" /> <span><b className="text-amber-400">Vàng:</b> Cảnh báo (Thiếu ảnh, sắp hết hàng)</span></div>
+                    <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-blue-500" /> <span><b className="text-blue-400">Xanh dương:</b> Thông tin mới (Đơn hàng, tin nhắn)</span></div>
+                    <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-emerald-500" /> <span><b className="text-emerald-400">Xanh lá:</b> Thành công</span></div>
+                    <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-zinc-500" /> <span><b className="text-zinc-400">Xám:</b> Thông báo phụ</span></div>
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+          </div>
           {notifications.length > 0 && (
             <button 
               onClick={() => clearNotifications()}
-              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors uppercase font-bold tracking-wider"
+              className="text-[10px] text-muted-foreground hover:text-foreground transition-colors uppercase font-bold tracking-widest bg-muted/30 px-2 py-1 rounded-md"
             >
               Xóa tất cả
             </button>
@@ -102,28 +144,32 @@ export function AdminNotificationBell() {
                   key={notification.id}
                   onClick={() => handleNotificationClick(notification)}
                   className={cn(
-                    "group flex cursor-pointer gap-3 border-b border-border/5 p-4 transition-all hover:bg-muted/50 last:border-0",
+                    "group flex cursor-pointer gap-3 border-b border-border/5 p-4 transition-all duration-300 hover:bg-muted/80 last:border-0 relative overflow-hidden",
                     getBgColor(notification.type)
                   )}
                 >
-                  <div className="mt-0.5 shrink-0 drop-shadow-sm">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 opacity-50 group-hover:opacity-100 transition-opacity" 
+                       style={{ backgroundColor: notification.type === 'error' ? '#ef4444' : notification.type === 'warning' ? '#f59e0b' : '#3b82f6' }} 
+                  />
+                  
+                  <div className="mt-0.5 shrink-0 drop-shadow-sm transition-transform group-hover:scale-110 duration-300">
                     {getIcon(notification.type)}
                   </div>
                   <div className="flex-1 space-y-1">
-                    <p className="text-sm font-semibold leading-none text-foreground">
+                    <p className="text-sm font-bold leading-tight text-foreground/90 group-hover:text-foreground transition-colors">
                       {notification.title}
                     </p>
                     {notification.description && (
-                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
+                      <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1 leading-relaxed">
                         {notification.description}
                       </p>
                     )}
                     <div className="flex items-center gap-2 pt-2">
-                      <span className="text-[10px] font-medium text-muted-foreground/60">
-                        {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+                      <span className="text-[9px] font-bold text-muted-foreground/50 uppercase tracking-wider">
+                        {new Date(notification.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                       {notification.action && (
-                        <span className="text-[10px] font-bold uppercase text-primary">
+                        <span className="text-[9px] font-bold uppercase text-primary/80 group-hover:text-primary transition-colors">
                           • {notification.action.label}
                         </span>
                       )}

@@ -8,6 +8,7 @@ export interface AdminNotification {
   title: string;
   description?: string;
   elementId?: string;
+  elementIds?: string[];
   action?: {
     label: string;
     onClick: () => void;
