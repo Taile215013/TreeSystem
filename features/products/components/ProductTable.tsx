@@ -32,6 +32,7 @@ import Image from "next/image";
 import { DeleteProductButton } from "./DeleteProductButton";
 import { bulkUpdateProductsAction, bulkDeleteProductsAction } from "../actions/product.actions";
 import { UploadButton } from "@/lib/uploadthing";
+import { optimizeImageToWebp } from "@/lib/image-optimizer";
 import { UpdateProductInput } from "../schemas/product.schema";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -319,6 +320,9 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
                                       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] rounded-xl opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
                                         <UploadButton
                                           endpoint="productImage"
+                                          onBeforeUploadBegin={async (files) => {
+                                            return await Promise.all(files.map(f => optimizeImageToWebp(f)));
+                                          }}
                                           onClientUploadComplete={(res) => {
                                             const url = res[0]?.ufsUrl || res[0]?.url;
                                             if (url) handleChange(p.id, "imageUrl", url);
@@ -447,6 +451,9 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
                       <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
                          <UploadButton
                             endpoint="productImage"
+                            onBeforeUploadBegin={async (files) => {
+                              return await Promise.all(files.map(f => optimizeImageToWebp(f)));
+                            }}
                             onClientUploadComplete={(res) => {
                               const url = res[0]?.ufsUrl || res[0]?.url;
                               if (url) handleChange(p.id, "imageUrl", url);

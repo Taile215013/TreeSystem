@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { productSchema, CreateProductInput } from "../schemas/product.schema";
 import { Loader2, PlusCircle, CheckCircle2, AlertCircle, Layers, ListPlus, Upload, FileSpreadsheet } from "lucide-react";
 import { UploadButton } from "@/lib/uploadthing";
+import { optimizeImageToWebp } from "@/lib/image-optimizer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { bulkCreateProductsAction, createProductAction } from "../actions/product.actions";
 import { Button } from "@/components/ui/button";
@@ -419,6 +420,9 @@ export function ProductForm() {
               <div className="p-4 rounded-2xl border border-dashed border-border/50 bg-zinc-50/30 dark:bg-white/5 flex flex-col items-center gap-3 transition-colors hover:border-primary/50 group">
                 <UploadButton
                   endpoint="productImage"
+                  onBeforeUploadBegin={async (files) => {
+                    return await Promise.all(files.map(f => optimizeImageToWebp(f)));
+                  }}
                   onClientUploadComplete={(res) => {
                     const url = res[0]?.ufsUrl || res[0]?.url;
                     if (url) setValue("imageUrl", url);
