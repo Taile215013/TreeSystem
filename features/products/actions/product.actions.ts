@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { productService } from "../services/product.service";
-import { productSchema, CreateProductInput, UpdateProductInput } from "../schemas/product.schema";
+import { productSchema, updateProductSchema, CreateProductInput, UpdateProductInput } from "../schemas/product.schema";
 import { ActionResponse } from "../types/product.types";
 import { getUserSession } from "@/lib/session";
 import { z } from "zod";
@@ -20,14 +20,10 @@ function generateSlug(text: string): string {
 }
 
 /**
- * Danh sách username được cấp quyền Admin đầy đủ (bao gồm quyền xóa sản phẩm).
- * Sau này nên nâng cấp lên hệ thống Role trong DB.
+ * Kiểm tra quyền Admin — dùng role từ DB, không còn whitelist cứng nữa.
  */
-const ADMIN_USERNAMES = ["admin", "thanhtai", "root"];
-
-function isAdminUser(username: string | null | undefined): boolean {
-  if (!username) return false;
-  return ADMIN_USERNAMES.includes(username.toLowerCase());
+function isAdminUser(role: string | null | undefined): boolean {
+  return role === "admin";
 }
 
 export async function createProductAction(data: CreateProductInput): Promise<ActionResponse> {
@@ -35,15 +31,26 @@ export async function createProductAction(data: CreateProductInput): Promise<Act
     const validatedData = productSchema.parse(data);
 
     // 1. Kiểm tra trùng Slug trước khi Insert để có lỗi rõ ràng
-    const existing = await productService.getBySlug(validatedData.slug);
+    const finalSlug = validatedData.slug || generateSlug(validatedData.name);
+    const existing = await productService.getBySlug(finalSlug);
     if (existing) {
       return { 
         success: false, 
-        message: `Sản phẩm "${validatedData.name}" đã tồn tại (trùng Slug: ${validatedData.slug}). Vui lòng đổi tên hoặc kiểm tra lại!` 
+        message: `Sản phẩm "${validatedData.name}" đã tồn tại (trùng Slug: ${finalSlug}). Vui lòng đổi tên hoặc kiểm tra lại!` 
       };
     }
 
-    await productService.create(validatedData);
+    const dataToCreate = {
+      ...validatedData,
+      slug: finalSlug,
+      currentPrice: validatedData.currentPrice || "0",
+      status: validatedData.status || "active",
+      waterNeed: validatedData.waterNeed || "Medium",
+      environment: validatedData.environment || "Indoor",
+      plantType: validatedData.plantType || "Leaf",
+    };
+
+    await productService.create(dataToCreate);
     revalidatePath("/admin/products");
     revalidatePath("/admin/warehouse");
     return { success: true, message: "Thêm sản phẩm thành công!" };
@@ -74,7 +81,7 @@ export async function createProductAction(data: CreateProductInput): Promise<Act
 
 export async function updateProductAction(id: number, data: UpdateProductInput): Promise<ActionResponse> {
   try {
-    const validatedData = productSchema.partial().parse(data);
+    const validatedData = updateProductSchema.parse(data);
     await productService.update(id, validatedData);
     revalidatePath("/admin/products");
     return { success: true, message: "Cập nhật sản phẩm thành công!" };
@@ -125,30 +132,39 @@ export async function bulkUpdateProductsAction(updates: { id: number; data: Upda
   try {
     // Thực hiện cập nhật hàng loạt
     await Promise.all(
-      updates.map(u => productService.update(u.id, productSchema.partial().parse(u.data)))
+      updates.map(u => productService.update(u.id, updateProductSchema.parse(u.data)))
     );
     revalidatePath("/admin/products");
     return { success: true, message: `Đã cập nhật ${updates.length} sản phẩm thành công!` };
   } catch (error: any) {
-    console.error("[bulkUpdateProductsAction]", error);
-    return { success: false, message: "Có lỗi khi cập nhật hàng loạt sản phẩm." };
+    console.error("[bulkUpdateProductsAction ERROR]:", error);
+
+    if (error instanceof z.ZodError) {
+      return { success: false, message: "Dữ liệu cập nhật không hợp lệ, vui lòng kiểm tra lại!" };
+    }
+
+    if (error.code === "23505" || error.cause?.code === "23505") {
+      return { success: false, message: "Slug hoặc Tên này đã bị trùng lặp với một sản phẩm khác." };
+    }
+
+    return { success: false, message: error.message || "Có lỗi hệ thống khi cập nhật hàng loạt sản phẩm." };
   }
 }
 
-export async function deleteProductAction(id: number): Promise<ActionResponse> {
-  // Kiểm tra quyền trên Server — không thể bypass từ client
+export async function deleteProductAction(id: number, mode: "trash" | "permanent" = "trash"): Promise<ActionResponse> {
   const session = await getUserSession();
-  if (!session || !isAdminUser(session.username)) {
-    return {
-      success: false,
-      message: "Từ chối truy cập: Bạn không có quyền xóa sản phẩm.",
-    };
+  if (!session || !isAdminUser(session.role)) {
+    return { success: false, message: "Từ chối truy cập: Bạn không có quyền xóa sản phẩm." };
   }
 
   try {
-    await productService.delete(id);
+    await productService.delete(id, mode);
     revalidatePath("/admin/products");
-    return { success: true, message: "Đã lưu trữ sản phẩm thành công." };
+    return { 
+      success: true, 
+      message: mode === "trash" ? "Đã đưa sản phẩm vào thùng rác." : "Đã xóa vĩnh viễn sản phẩm." 
+    };
+
   } catch (error) {
     console.error("[deleteProductAction]", error);
     return {
@@ -158,19 +174,20 @@ export async function deleteProductAction(id: number): Promise<ActionResponse> {
   }
 }
 
-export async function bulkDeleteProductsAction(ids: number[]): Promise<ActionResponse> {
+export async function bulkDeleteProductsAction(ids: number[], mode: "trash" | "permanent" = "trash"): Promise<ActionResponse> {
   const session = await getUserSession();
-  if (!session || !isAdminUser(session.username)) {
-    return {
-      success: false,
-      message: "Từ chối truy cập: Bạn không có quyền xóa sản phẩm.",
-    };
+  if (!session || !isAdminUser(session.role)) {
+    return { success: false, message: "Từ chối truy cập: Bạn không có quyền xóa sản phẩm." };
   }
 
   try {
-    await Promise.all(ids.map(id => productService.delete(id)));
+    await productService.bulkDelete(ids, mode);
     revalidatePath("/admin/products");
-    return { success: true, message: `Đã xóa ${ids.length} sản phẩm thành công!` };
+    return { 
+      success: true, 
+      message: mode === "trash" ? `Đã đưa ${ids.length} sản phẩm vào thùng rác.` : `Đã xóa vĩnh viễn ${ids.length} sản phẩm.` 
+    };
+
   } catch (error) {
     console.error("[bulkDeleteProductsAction]", error);
     return { success: false, message: "Có lỗi khi xóa hàng loạt sản phẩm." };
@@ -183,5 +200,5 @@ export async function bulkDeleteProductsAction(ids: number[]): Promise<ActionRes
  */
 export async function checkIsAdminAction(): Promise<boolean> {
   const session = await getUserSession();
-  return isAdminUser(session?.username);
+  return isAdminUser(session?.role);
 }

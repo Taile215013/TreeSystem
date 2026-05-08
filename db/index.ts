@@ -14,9 +14,10 @@ const globalForDrizzle = globalThis as unknown as {
 };
 
 const client = globalForDrizzle.client ?? postgres(connectionString, { 
-  max: process.env.NODE_ENV === 'production' ? undefined : 1, // Chỉ giữ duy nhất 1 kết nối ở Dev
-  idle_timeout: 1, // Đóng ngay lập tức khi không dùng
-  connect_timeout: 10,
+  max: process.env.NODE_ENV === 'production' ? undefined : 1,
+  idle_timeout: 1,
+  connect_timeout: 5, // Giảm xuống 5s để ứng dụng phản hồi nhanh khi DB chết
+  onnotice: (notice) => console.log("DB Notice:", notice.message),
 });
 
 if (process.env.NODE_ENV !== 'production') globalForDrizzle.client = client;

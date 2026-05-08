@@ -11,13 +11,17 @@ export const supplierService = {
     return await db.select({
       id: suppliers.id,
       name: suppliers.name,
+      imageUrl: suppliers.imageUrl,
       phone: suppliers.phone,
       address: suppliers.address,
+      specifications: suppliers.specifications,
+      type: suppliers.type,
       createdAt: suppliers.createdAt,
       batchCount: sql<number>`(SELECT count(*) FROM ${productBatches} WHERE ${productBatches.supplierId} = ${suppliers.id})`.mapWith(Number)
     })
     .from(suppliers)
     .orderBy(suppliers.createdAt);
+
   },
 
   /**
@@ -26,9 +30,13 @@ export const supplierService = {
   async create(data: SupplierInput) {
     return await db.insert(suppliers).values({
       name: data.name,
+      imageUrl: data.imageUrl,
       phone: data.phone,
-      address: data.address
+      address: data.address,
+      specifications: data.specifications,
+      type: data.type,
     }).returning();
+
   },
 
   /**
@@ -38,12 +46,16 @@ export const supplierService = {
     return await db.update(suppliers)
       .set({
         name: data.name,
+        imageUrl: data.imageUrl,
         phone: data.phone,
         address: data.address,
+        specifications: data.specifications,
+        type: data.type,
         updatedAt: new Date()
       })
       .where(eq(suppliers.id, id))
       .returning();
+
   },
 
   /**

@@ -5,6 +5,9 @@ import { relations } from "drizzle-orm";
 export const stockChangeReasonEnum = pgEnum("stock_change_reason", ["import", "sale", "damaged", "return", "adjustment"]);
 export const orderStatusEnum = pgEnum("order_status", ["pending", "processing", "shipped", "delivered", "canceled"]);
 export const productStatusEnum = pgEnum("product_status", ["active", "draft", "archived"]);
+export const userRoleEnum = pgEnum("user_role", ["admin", "staff", "customer"]);
+export const supplierTypeEnum = pgEnum("supplier_type", ["garden", "provider"]); // Nhà vườn | Nơi cung cấp
+
 
 
 export const waterNeedEnum = pgEnum("water_need", ["Low", "Medium", "High", "Aquatic"]); 
@@ -33,11 +36,17 @@ export const categoriesRelations = relations(categories, ({ many }) => ({
 export const suppliers = pgTable("suppliers", {
   id: serial("id").primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
+  imageUrl: text("image_url"),
   phone: varchar("phone", { length: 20 }),
   address: text("address"),
+  specifications: text("specifications"), // Quy cách kích thước
+  type: supplierTypeEnum("type").default("garden"),
+  latitude: decimal("latitude", { precision: 10, scale: 7 }),
+  longitude: decimal("longitude", { precision: 10, scale: 7 }),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
 });
+
 
 export const suppliersRelations = relations(suppliers, ({ many }) => ({
   productBatches: many(productBatches),
@@ -72,6 +81,7 @@ export const products = pgTable("products", {
 
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow().$onUpdate(() => new Date()),
+  deletedAt: timestamp("deleted_at"), // Xóa mềm / Thùng rác
 });
 
 export const productsRelations = relations(products, ({ one, many }) => ({
@@ -212,6 +222,7 @@ export const users = pgTable("users", {
   coverUrl: text("cover_url"),
   bio: text("bio"),
   passwordHash: varchar("passwordHash", { length: 255 }).notNull(),
+  role: userRoleEnum("role").default("customer").notNull(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

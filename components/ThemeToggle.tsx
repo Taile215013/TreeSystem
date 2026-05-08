@@ -13,8 +13,8 @@ export function ThemeToggle() {
       title={isDark ? "Chuyển sang Chế độ Sáng" : "Chuyển sang Chế độ Tối"}
       className={cn(
         "relative flex h-9 w-9 items-center justify-center rounded-lg border transition-all duration-300",
-        isDark 
-          ? "bg-zinc-900 border-zinc-800 text-amber-400 hover:bg-zinc-800" 
+        isDark
+          ? "bg-zinc-900 border-zinc-800 text-amber-400 hover:bg-zinc-800"
           : "bg-white border-zinc-200 text-amber-600 hover:bg-zinc-50 shadow-sm"
       )}
     >

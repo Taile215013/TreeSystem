@@ -4,8 +4,9 @@ import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { 
-  Plus, Users, Phone, MapPin, Loader2, Save, X
+  Plus, Users, Phone, MapPin, Loader2, Save, X, Image as ImageIcon, Ruler, Building2, TreePine
 } from 'lucide-react';
+
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,7 +15,7 @@ import { supplierSchema, SupplierInput } from "../schemas/supplier.schema";
 import { createSupplierAction, updateSupplierAction } from "../actions/supplier.actions";
 
 interface SupplierFormProps {
-  initialData?: SupplierInput;
+  initialData?: any; // Use any or a partial type to avoid strict mismatches with initial DB state
   onSuccess?: () => void;
 }
 
@@ -25,8 +26,15 @@ export function SupplierForm({ initialData, onSuccess }: SupplierFormProps) {
 
   const { register, handleSubmit, formState: { errors }, reset } = useForm<SupplierInput>({
     resolver: zodResolver(supplierSchema),
-    defaultValues: initialData || { name: "", phone: "", address: "" }
+    defaultValues: initialData ? {
+      ...initialData,
+      imageUrl: initialData.imageUrl || "",
+      specifications: initialData.specifications || "",
+      type: initialData.type || "garden"
+    } : { name: "", phone: "", address: "", imageUrl: "", specifications: "", type: "garden" }
   });
+
+
 
   const onSubmit = async (data: SupplierInput) => {
     setIsSubmitting(true);
@@ -81,10 +89,47 @@ export function SupplierForm({ initialData, onSuccess }: SupplierFormProps) {
                   <Input 
                     {...register("name")}
                     placeholder="VD: Nhà vườn Ba Trúc..." 
-                    className="bg-zinc-900 border-white/5 h-12 rounded-xl focus:ring-emerald-500/50"
+                    className="bg-zinc-900 border-white/5 h-12 rounded-xl focus:ring-emerald-500/50 text-white"
                   />
                   {errors.name && <p className="text-xs text-red-500 font-medium">{errors.name.message}</p>}
                 </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-zinc-400">Phân loại</Label>
+                    <select
+                      {...register("type")}
+                      className="w-full bg-zinc-900 border border-white/5 h-12 rounded-xl px-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none"
+                    >
+                      <option value="garden">🏡 Nhà vườn</option>
+                      <option value="provider">🏢 Nơi cung cấp</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-zinc-400">Hình ảnh (URL)</Label>
+                    <div className="relative">
+                      <ImageIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                      <Input 
+                        {...register("imageUrl")}
+                        placeholder="https://..." 
+                        className="pl-10 bg-zinc-900 border-white/5 h-12 rounded-xl focus:ring-emerald-500/50 text-white"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-zinc-400">Quy cách / Kích thước</Label>
+                  <div className="relative">
+                    <Ruler className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600" size={16} />
+                    <Input 
+                      {...register("specifications")}
+                      placeholder="VD: Chậu C7-C15, cao 1m-2m..." 
+                      className="pl-10 bg-zinc-900 border-white/5 h-12 rounded-xl focus:ring-emerald-500/50 text-white"
+                    />
+                  </div>
+                </div>
+
 
                 <div className="space-y-2">
                   <Label className="text-zinc-400">Số điện thoại</Label>

@@ -57,7 +57,20 @@ export default function WarehouseForm({ initialData }: WarehouseFormProps) {
   const [locationId, setLocationId] = useState<string>(initialData.locations[0]?.id.toString() || "");
   const [supplierId, setSupplierId] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
-  const [receiptCode, setReceiptCode] = useState<string>(`NK-${format(new Date(), 'yyMMdd')}-${Math.floor(100 + Math.random() * 900)}`);
+  
+  // Công thức mã: (NĂM THÁNG NGÀY) + THỨ + SUFFIX (In hoa)
+  // Ví dụ: 20260508FRI-875
+  const generateReceiptCode = () => {
+    const now = new Date();
+    const dateStr = format(now, 'yyyyMMdd');
+    // Lấy thứ viết tắt bằng tiếng Anh (MON, TUE...) và in hoa
+    const dayStr = format(now, 'EEE', { locale: undefined }).toUpperCase(); 
+    const randomStr = Math.floor(100 + Math.random() * 900).toString();
+    return `${dateStr}${dayStr}-${randomStr}`;
+  };
+
+  const [receiptCode, setReceiptCode] = useState<string>(generateReceiptCode());
+
 
   const [items, setItems] = useState<ImportItem[]>([
     { id: Math.random().toString(36).substr(2, 9), productId: 0, quantity: 1, importPrice: 0, minPrice: 0, maxPrice: 0 }

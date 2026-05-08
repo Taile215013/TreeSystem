@@ -12,7 +12,7 @@ export const plantTypeEnum = z.enum(["Flower", "Leaf", "Fruit"]);
  */
 export const productSchema = z.object({
   name: z.string().min(1, "Tên sản phẩm không được để trống").max(255, "Tên quá dài"),
-  slug: z.string().max(255, "Slug quá dài").optional().default(""),
+  slug: z.string().max(255, "Slug quá dài").optional(),
   description: z.string().optional().nullable().transform(val => val === "" ? null : val),
   imageUrl: z.string()
     .url("Link ảnh không hợp lệ")
@@ -26,18 +26,18 @@ export const productSchema = z.object({
     z.coerce.number().nullable().optional()
   ),
 
-  // Giá bán hiển thị — mặc định là 0, sẽ được cập nhật sau khi nhập kho
+  // Giá bán hiển thị
   currentPrice: z.preprocess(
     (val) => (val === "" ? 0 : val),
-    z.coerce.number().min(0, "Giá không được âm").default(0)
-  ).transform((val) => val.toString()),
+    z.coerce.number().min(0, "Giá không được âm")
+  ).transform((val) => val.toString()).optional(),
 
-  status: z.enum(["active", "draft", "archived"]).default("active"),
+  status: z.enum(["active", "draft", "archived"]).optional(),
 
   // Thuộc tính đặc thù của cây cảnh
-  waterNeed: waterNeedEnum.default("Medium"),
-  environment: environmentEnum.default("Indoor"),
-  plantType: plantTypeEnum.default("Leaf"),
+  waterNeed: waterNeedEnum.optional(),
+  environment: environmentEnum.optional(),
+  plantType: plantTypeEnum.optional(),
 
   // Kích thước
   potSize: z.string().optional().nullable().transform(val => val === "" ? null : val),
@@ -46,4 +46,7 @@ export const productSchema = z.object({
 });
 
 export type CreateProductInput = z.infer<typeof productSchema>;
-export type UpdateProductInput = Partial<CreateProductInput>;
+
+// Tách riêng Update Schema để không có default value, giúp Partial() hoạt động đúng nghĩa (chỉ update những gì gửi lên)
+export const updateProductSchema = productSchema.partial();
+export type UpdateProductInput = z.infer<typeof updateProductSchema>;

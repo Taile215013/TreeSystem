@@ -1,7 +1,7 @@
 import { supplierService } from "@/features/suppliers/services/supplier.service";
-import { SupplierTable } from "@/features/suppliers/components/SupplierTable";
 import { SupplierForm } from "@/features/suppliers/components/SupplierForm";
-import { Users, Truck } from "lucide-react";
+import SuppliersDashboardClient from "@/features/suppliers/components/SuppliersDashboardClient";
+import { Truck } from "lucide-react";
 
 export default async function SuppliersPage() {
   const suppliers = await supplierService.getAll();
@@ -15,17 +15,16 @@ export default async function SuppliersPage() {
             <Truck size={32} />
           </div>
           <div>
-            <h1 className="text-3xl font-black text-white">Nhà Cung Cấp</h1>
+            <h1 className="text-3xl font-black text-white uppercase tracking-tighter">Nhà Cung Cấp</h1>
             <p className="text-zinc-500 text-sm">Quản lý mạng lưới đối tác và nhà vườn cung cấp cây</p>
           </div>
         </div>
         <SupplierForm />
       </div>
 
-      {/* Main Table */}
-      <div className="max-w-[1400px]">
-        <SupplierTable data={suppliers} />
-      </div>
+      {/* Main Dashboard */}
+      <SuppliersDashboardClient initialData={suppliers} />
     </div>
   );
 }
+

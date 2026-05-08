@@ -13,11 +13,15 @@ import { deleteSupplierAction } from "../actions/supplier.actions";
 interface Supplier {
   id: number;
   name: string;
+  imageUrl?: string | null;
   phone: string | null;
   address: string | null;
+  specifications?: string | null;
+  type: "garden" | "provider";
   createdAt: Date | null;
   batchCount: number;
 }
+
 
 export function SupplierTable({ data }: { data: Supplier[] }) {
   const handleDelete = async (id: number) => {
@@ -42,13 +46,33 @@ export function SupplierTable({ data }: { data: Supplier[] }) {
           {data.length > 0 ? data.map((s) => (
             <tr key={s.id} className="hover:bg-white/[0.02] transition-colors group">
               <td className="px-6 py-5">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-500 font-black">
-                    {s.name.charAt(0).toUpperCase()}
+                <div className="flex items-center gap-4">
+                  <div className="relative h-12 w-12 rounded-2xl bg-zinc-900 border border-white/5 overflow-hidden flex items-center justify-center shrink-0">
+                    {s.imageUrl ? (
+                      <img src={s.imageUrl} alt={s.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <div className="text-emerald-500 font-black text-xl">{s.name.charAt(0).toUpperCase()}</div>
+                    )}
+                    <div className="absolute top-0 right-0 p-0.5">
+                      <div className={`h-2 w-2 rounded-full ${s.type === 'garden' ? 'bg-emerald-500' : 'bg-blue-500'} shadow-sm shadow-black`} />
+                    </div>
                   </div>
-                  <div className="font-bold text-white text-base">{s.name}</div>
+                  <div className="flex flex-col gap-1">
+                    <div className="font-bold text-white text-base leading-tight">{s.name}</div>
+                    <div className="flex items-center gap-1.5">
+                      <span className={`text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded ${s.type === 'garden' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                        {s.type === 'garden' ? 'Nhà vườn' : 'Cung cấp'}
+                      </span>
+                      {s.specifications && (
+                        <span className="text-[9px] text-zinc-500 italic truncate max-w-[150px]">
+                          • {s.specifications}
+                        </span>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </td>
+
               <td className="px-6 py-5">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-sm text-zinc-300">

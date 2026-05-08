@@ -5,9 +5,8 @@ import { useForm, UseFormRegisterReturn } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { productSchema, CreateProductInput } from "../schemas/product.schema";
 import { Loader2, PlusCircle, CheckCircle2, AlertCircle, Layers, ListPlus, Upload, FileSpreadsheet } from "lucide-react";
-import { UploadButton } from "@/lib/uploadthing";
-import { optimizeImageToWebp } from "@/lib/image-optimizer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CustomImageUpload } from "./CustomImageUpload";
 import { bulkCreateProductsAction, createProductAction } from "../actions/product.actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -241,13 +240,12 @@ export function ProductForm() {
       const separator = hasTab ? "\t" : ",";
       return lines.map((line) => {
         const parts = line.split(separator).map((p) => p.trim());
-        // Giả định thứ tự cột thông minh: Tên, Giá, Cỡ chậu, Chiều cao...
+        // Giả định thứ tự cột thông minh: Tên, Cỡ chậu, Chiều cao, Đường kính
         return {
           name: parts[0],
-          currentPrice: parts[1] || "0",
-          potSize: parts[2] || undefined,
-          height: parts[3] || undefined,
-          diameter: parts[4] || undefined,
+          potSize: parts[1] || undefined,
+          height: parts[2] || undefined,
+          diameter: parts[3] || undefined,
         };
       });
     }
@@ -418,19 +416,13 @@ export function ProductForm() {
                 Hình Ảnh
               </Label>
               <div className="p-4 rounded-2xl border border-dashed border-border/50 bg-zinc-50/30 dark:bg-white/5 flex flex-col items-center gap-3 transition-colors hover:border-primary/50 group">
-                <UploadButton
-                  endpoint="productImage"
-                  onBeforeUploadBegin={async (files) => {
-                    return await Promise.all(files.map(f => optimizeImageToWebp(f)));
-                  }}
-                  onClientUploadComplete={(res) => {
-                    const url = res[0]?.ufsUrl || res[0]?.url;
-                    if (url) setValue("imageUrl", url);
-                  }}
-                  onUploadError={(err) =>
-                    setMessage({ text: `Upload lỗi: ${err.message}`, type: "error" })
-                  }
-                />
+                <CustomImageUpload
+                  onUploadComplete={(url) => setValue("imageUrl", url)}
+                  onError={(err) => setMessage({ text: `Upload lỗi: ${err}`, type: "error" })}
+                  className="w-full h-12 bg-primary/10 hover:bg-primary/20 text-primary font-bold text-xs uppercase tracking-wider rounded-xl transition-colors border border-primary/20 flex flex-col gap-1 items-center justify-center"
+                >
+                  <div className="flex items-center gap-2"><Upload className="h-4 w-4"/> Tải Ảnh Lên</div>
+                </CustomImageUpload>
                 {imageUrl && (
                   <div className="relative h-20 w-20 rounded-2xl overflow-hidden ring-2 ring-primary/20 shadow-lg group">
                     <img src={imageUrl} alt="Preview" className="h-full w-full object-cover" />
@@ -463,7 +455,7 @@ export function ProductForm() {
             <div className="p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
               <p className="text-[10px] text-amber-700 dark:text-amber-400 leading-relaxed font-medium">
                 💡 Hỗ trợ dán trực tiếp từ Excel hoặc tải lên file <b>.xlsx, .json, .csv</b>. 
-                Thứ tự cột Excel: Tên | Giá | Cỡ chậu | Chiều cao | Đường kính.
+                Thứ tự cột Excel: Tên | Cỡ chậu | Chiều cao | Đường kính.
               </p>
             </div>
 

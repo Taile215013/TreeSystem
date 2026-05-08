@@ -30,9 +30,18 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { DeleteProductButton } from "./DeleteProductButton";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { AlertTriangle, ShieldCheck } from "lucide-react";
+
 import { bulkUpdateProductsAction, bulkDeleteProductsAction } from "../actions/product.actions";
-import { UploadButton } from "@/lib/uploadthing";
-import { optimizeImageToWebp } from "@/lib/image-optimizer";
+import { CustomImageUpload } from "./CustomImageUpload";
 import { UpdateProductInput } from "../schemas/product.schema";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -51,7 +60,12 @@ const Checkbox = ({ checked, onCheckedChange, className, disabled }: { checked: 
 export type Product = typeof products.$inferSelect & {
   totalStock?: number;
   category?: { id: number; name: string } | null;
-  supplier?: { id: number; name: string } | null;
+  supplier?: { 
+    id: number; 
+    name: string; 
+    imageUrl?: string | null; 
+    specifications?: string | null; 
+  } | null;
 };
 
 interface ProductTableProps {
@@ -60,15 +74,26 @@ interface ProductTableProps {
 }
 
 const plantTypeOptions = [
-  { value: "Leaf", label: "🌿 Lá" },
-  { value: "Flower", label: "🌸 Hoa" },
-  { value: "Fruit", label: "🍎 Trái" },
+  { value: "Leaf", label: "🍃 Cây lá" },
+  { value: "Flower", label: "🌸 Cây hoa" },
+  { value: "Fruit", label: "🍎 Cây trái" },
+];
+
+const dimensionSuggestions = [
+  "C5", "C7", "C9", "C10", "C15", "C20", 
+  "20cm", "40cm", "60cm", "80cm", "100cm", "120cm", "150cm", "170cm", "200cm"
 ];
 
 const processDim = (val: string) => {
   if (!val) return "";
-  const num = val.replace(/[^0-9.]/g, "");
-  return num ? `${num}cm` : "";
+  // Nếu là số thuần túy (ví dụ: "170")
+  if (/^\d+$/.test(val.trim())) {
+    const num = parseInt(val);
+    if (num >= 100) return `${num / 100}m`;
+    return `${num}cm`;
+  }
+  // Nếu có cả chữ và số (ví dụ: "C20", "1.5m") -> Giữ nguyên
+  return val;
 };
 
 export function ProductTable({ products: initialProducts, isAdmin }: ProductTableProps) {
@@ -81,6 +106,9 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
   const [viewMode, setViewMode] = useState<'list' | 'grid'>('grid'); // Default to grid for better mobile view
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
+  const [bulkDeleteMode, setBulkDeleteMode] = useState<"trash" | "permanent">("trash");
+
   const itemsPerPage = 20; // Increased since items are smaller now
 
   useEffect(() => {
@@ -91,7 +119,11 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
     let result = [...initialProducts];
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
-      result = result.filter(p => p.name?.toLowerCase().includes(query));
+      result = result.filter(p => 
+        p.name?.toLowerCase().includes(query) || 
+        p.supplier?.name?.toLowerCase().includes(query) ||
+        p.category?.name?.toLowerCase().includes(query)
+      );
     }
     if (sortConfig !== null) {
       result.sort((a: any, b: any) => {
@@ -131,15 +163,18 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
     }
   };
 
-  const handleBulkDelete = () => {
-    if (!isEditing || selectedIds.length === 0) return;
-    if (!confirm(`Bạn có chắc muốn xóa ${selectedIds.length} sản phẩm?`)) return;
+  const handleBulkDeleteConfirm = () => {
     startTransition(async () => {
-      const res = await bulkDeleteProductsAction(selectedIds);
-      if (res.success) setSelectedIds([]);
-      else alert(res.message);
+      const res = await bulkDeleteProductsAction(selectedIds, bulkDeleteMode);
+      if (res.success) {
+        setSelectedIds([]);
+        setIsBulkDeleteDialogOpen(false);
+      } else {
+        alert(res.message);
+      }
     });
   };
+
 
   const requestSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
@@ -232,16 +267,71 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
           <div className="flex items-center justify-between bg-red-500/10 border border-red-500/20 px-3 py-2 rounded-xl animate-in slide-in-from-top-2">
             <span className="text-[10px] font-black text-red-600 uppercase tracking-widest">Đã chọn {selectedIds.length} mục</span>
             <Button
-              onClick={handleBulkDelete}
+              onClick={() => setIsBulkDeleteDialogOpen(true)}
               disabled={isPending}
               variant="destructive"
               className="h-7 px-3 rounded-lg font-black text-[9px] uppercase tracking-wider"
             >
-              Xóa ngay
+              Tiếp tục xóa
             </Button>
           </div>
         )}
       </div>
+
+      {/* 🗑️ Bulk Delete Dialog 🗑️ */}
+      <Dialog open={isBulkDeleteDialogOpen} onOpenChange={setIsBulkDeleteDialogOpen}>
+        <DialogContent className="bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 text-zinc-900 dark:text-white rounded-2xl sm:max-w-[420px] overflow-hidden p-0 shadow-2xl">
+          <div className="h-1.5 bg-gradient-to-r from-red-500 via-orange-500 to-amber-500" />
+          <div className="p-6">
+            <DialogHeader>
+              <div className="mx-auto h-12 w-12 rounded-2xl bg-red-100 dark:bg-red-500/15 flex items-center justify-center mb-3 ring-4 ring-red-500/10">
+                <AlertTriangle className="h-6 w-6 text-red-500" />
+              </div>
+              <DialogTitle className="text-center text-lg font-black tracking-tight">
+                Xác nhận xóa {selectedIds.length} sản phẩm
+              </DialogTitle>
+              <DialogDescription className="text-center text-zinc-500 dark:text-zinc-400 text-xs mt-1">
+              Bạn có chắc chắn muốn xóa {selectedIds.length} sản phẩm đã chọn? Hãy chọn hình thức xóa phù hợp.
+            </DialogDescription>
+          </DialogHeader>
+
+          {/* Mode Selection */}
+          <div className="mt-6 grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setBulkDeleteMode("trash")}
+              className={`flex flex-col items-center p-3 rounded-xl border-2 transition-all ${bulkDeleteMode === "trash" ? "border-amber-500 bg-amber-500/10 text-amber-600" : "border-zinc-100 dark:border-zinc-800 text-zinc-400"}`}
+            >
+              <Trash2 className="h-4 w-4 mb-1" />
+              <span className="text-[10px] font-black uppercase tracking-tighter">Thùng rác</span>
+              <span className="text-[8px] opacity-60">(Lưu 2 tuần)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setBulkDeleteMode("permanent")}
+              className={`flex flex-col items-center p-3 rounded-xl border-2 transition-all ${bulkDeleteMode === "permanent" ? "border-red-500 bg-red-500/10 text-red-600" : "border-zinc-100 dark:border-zinc-800 text-zinc-400"}`}
+            >
+              <AlertTriangle className="h-4 w-4 mb-1" />
+              <span className="text-[10px] font-black uppercase tracking-tighter">Xóa vĩnh viễn</span>
+              <span className="text-[8px] opacity-60">(Mất hoàn toàn)</span>
+            </button>
+          </div>
+
+          <div className="flex flex-col gap-2 mt-6 p-6 pt-0">
+            <Button
+              onClick={handleBulkDeleteConfirm}
+              disabled={isPending}
+              className={`w-full h-11 rounded-xl font-black text-xs uppercase ${bulkDeleteMode === "permanent" ? "bg-red-600 hover:bg-red-700" : "bg-amber-600 hover:bg-amber-700"}`}
+            >
+              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <ShieldCheck className="h-4 w-4 mr-2" />}
+              {bulkDeleteMode === "permanent" ? "Xác nhận xóa vĩnh viễn" : "Chuyển vào thùng rác"}
+            </Button>
+            <Button variant="ghost" onClick={() => setIsBulkDeleteDialogOpen(false)} className="text-[10px] font-bold">Hủy bỏ</Button>
+          </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
 
       {/* 📦 Content Area (Optimized for Small Screens) 📦 */}
       <div className="transition-all duration-500">
@@ -261,9 +351,8 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
                     <th onClick={() => requestSort('name')} className="px-3 py-3 text-[9px] font-black text-zinc-400 uppercase cursor-pointer hover:text-primary transition-colors">
                       Sản phẩm {getSortIcon('name')}
                     </th>
-                    <th onClick={() => requestSort('currentPrice')} className="px-3 py-3 text-[9px] font-black text-zinc-400 uppercase cursor-pointer hover:text-primary transition-colors">
-                      Giá {getSortIcon('currentPrice')}
-                    </th>
+                    <th className="px-3 py-3 text-[9px] font-black text-zinc-400 uppercase hidden sm:table-cell">Thuộc tính</th>
+                    <th className="px-3 py-3 text-[9px] font-black text-zinc-400 uppercase hidden md:table-cell">Quy cách / Kích thước</th>
                     <th className="px-3 py-3 text-[9px] font-black text-zinc-400 uppercase hidden sm:table-cell">Loại</th>
                     <th className="px-3 py-3 text-right"></th>
                   </tr>
@@ -318,20 +407,13 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
                                     )}
                                     {isEditing && (
                                       <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px] rounded-xl opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                                        <UploadButton
-                                          endpoint="productImage"
-                                          onBeforeUploadBegin={async (files) => {
-                                            return await Promise.all(files.map(f => optimizeImageToWebp(f)));
-                                          }}
-                                          onClientUploadComplete={(res) => {
-                                            const url = res[0]?.ufsUrl || res[0]?.url;
-                                            if (url) handleChange(p.id, "imageUrl", url);
-                                          }}
-                                          content={{
-                                            button() { return <PlusCircle className="h-5 w-5 text-white" />; }
-                                          }}
-                                          appearance={{ button: "bg-transparent border-none h-full w-full", allowedContent: "hidden" }}
-                                        />
+                                        <CustomImageUpload
+                                          onUploadComplete={(url) => handleChange(p.id, "imageUrl", url)}
+                                          onError={(err) => alert(err)}
+                                          className="h-full w-full"
+                                        >
+                                          <PlusCircle className="h-5 w-5 text-white" />
+                                        </CustomImageUpload>
                                       </div>
                                     )}
                                   </div>
@@ -366,8 +448,21 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
                                       {p.supplier && (
                                         <>
                                           <span className="text-zinc-300 text-[8px]">•</span>
-                                          <div className="text-[8px] font-bold text-amber-600 bg-amber-500/10 px-1 rounded uppercase">
+                                          <div className="flex items-center gap-1 text-[8px] font-bold text-amber-600 bg-amber-500/10 px-1.5 py-0.5 rounded uppercase">
+                                            {p.supplier.imageUrl && (
+                                              <div className="relative h-3 w-3 rounded-full overflow-hidden border border-amber-500/20">
+                                                <Image src={p.supplier.imageUrl} alt="" fill className="object-cover" />
+                                              </div>
+                                            )}
                                             {p.supplier.name}
+                                          </div>
+                                        </>
+                                      )}
+                                      {p.supplier?.specifications && (
+                                        <>
+                                          <span className="text-zinc-300 text-[8px]">•</span>
+                                          <div className="text-[8px] font-bold text-zinc-400 italic">
+                                            {p.supplier.specifications}
                                           </div>
                                         </>
                                       )}
@@ -375,21 +470,88 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
                                   </div>
                                 </div>
                               </td>
-                              <td className="px-3 py-3">
+                              <td className="px-3 py-3 hidden sm:table-cell">
                                  {isEditing ? (
-                                    <input
-                                      value={price}
-                                      onChange={(e) => handleChange(p.id, "currentPrice", e.target.value)}
-                                      className="w-20 bg-white dark:bg-zinc-950 px-2 py-1 text-[11px] font-black text-primary border border-primary/20 rounded-md outline-none"
-                                    />
+                                    <div className="flex flex-col gap-1.5 w-[100px]">
+                                      <select
+                                        value={(current.waterNeed ?? p.waterNeed) || ""}
+                                        onChange={(e) => handleChange(p.id, "waterNeed", e.target.value)}
+                                        className="w-full bg-white dark:bg-zinc-950 px-1 py-1 text-[9px] font-bold border border-primary/20 rounded-md outline-none focus:ring-2 focus:ring-primary/20"
+                                      >
+                                        <option value="Low">💧 Ít nước</option>
+                                        <option value="Medium">💧💧 Trung bình</option>
+                                        <option value="High">💧💧💧 Nhiều nước</option>
+                                        <option value="Aquatic">🌊 Thủy sinh</option>
+                                      </select>
+                                      <select
+                                        value={(current.environment ?? p.environment) || ""}
+                                        onChange={(e) => handleChange(p.id, "environment", e.target.value)}
+                                        className="w-full bg-white dark:bg-zinc-950 px-1 py-1 text-[9px] font-bold border border-primary/20 rounded-md outline-none focus:ring-2 focus:ring-primary/20"
+                                      >
+                                        <option value="Indoor">🏠 Trong nhà</option>
+                                        <option value="Outdoor">☀️ Ngoài trời</option>
+                                        <option value="Hybrid">🌗 Cả hai</option>
+                                      </select>
+                                    </div>
                                  ) : (
-                                    <span className="text-[11px] font-black text-primary">{Number(p.currentPrice).toLocaleString()}₫</span>
+                                    <div className="flex flex-col gap-1 text-[9px] font-bold opacity-70">
+                                      <div className="flex items-center gap-1"><Droplets className="h-2.5 w-2.5 text-blue-500"/> {p.waterNeed}</div>
+                                      <div className="flex items-center gap-1"><Tag className="h-2.5 w-2.5 text-emerald-500"/> {p.environment}</div>
+                                    </div>
+                                 )}
+                              </td>
+                              <td className="px-3 py-3 hidden md:table-cell">
+                                 {isEditing ? (
+                                    <div className="flex flex-col gap-1 w-[80px]">
+                                      <input
+                                        list="dimension-suggestions"
+                                        placeholder="Chậu"
+                                        value={current.potSize ?? p.potSize ?? ""}
+                                        onChange={(e) => handleChange(p.id, "potSize", e.target.value)}
+                                        onBlur={(e) => handleChange(p.id, "potSize", processDim(e.target.value))}
+                                        className="w-full bg-white dark:bg-zinc-950 px-1.5 py-0.5 text-[9px] font-bold border border-primary/20 rounded-md outline-none focus:ring-2 focus:ring-primary/20"
+                                      />
+                                      <input
+                                        list="dimension-suggestions"
+                                        placeholder="Cao"
+                                        value={current.height ?? p.height ?? ""}
+                                        onChange={(e) => handleChange(p.id, "height", e.target.value)}
+                                        onBlur={(e) => handleChange(p.id, "height", processDim(e.target.value))}
+                                        className="w-full bg-white dark:bg-zinc-950 px-1.5 py-0.5 text-[9px] font-bold border border-primary/20 rounded-md outline-none focus:ring-2 focus:ring-primary/20"
+                                      />
+                                      <input
+                                        list="dimension-suggestions"
+                                        placeholder="Rộng"
+                                        value={current.diameter ?? p.diameter ?? ""}
+                                        onChange={(e) => handleChange(p.id, "diameter", e.target.value)}
+                                        onBlur={(e) => handleChange(p.id, "diameter", processDim(e.target.value))}
+                                        className="w-full bg-white dark:bg-zinc-950 px-1.5 py-0.5 text-[9px] font-bold border border-primary/20 rounded-md outline-none focus:ring-2 focus:ring-primary/20"
+                                      />
+                                    </div>
+                                 ) : (
+                                    <div className="flex flex-col gap-0.5 text-[9px] font-bold opacity-70">
+                                      <span>Chậu: {p.potSize || "-"}</span>
+                                      <span>Cao: {p.height || "-"}</span>
+                                      <span>Rộng: {p.diameter || "-"}</span>
+                                    </div>
                                  )}
                               </td>
                               <td className="px-3 py-3 hidden sm:table-cell">
-                                <div className="inline-flex items-center px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-white/5 border border-border/40">
-                                  <span className="text-[8px] font-black text-zinc-500 uppercase tracking-tighter">{typeLabel}</span>
-                                </div>
+                                {isEditing ? (
+                                    <select
+                                      value={(current.plantType ?? p.plantType) || ""}
+                                      onChange={(e) => handleChange(p.id, "plantType", e.target.value)}
+                                      className="w-20 bg-white dark:bg-zinc-950 px-1 py-1 text-[9px] font-bold border border-primary/20 rounded-md outline-none focus:ring-2 focus:ring-primary/20"
+                                    >
+                                      {plantTypeOptions.map(opt => (
+                                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                      ))}
+                                    </select>
+                                ) : (
+                                  <div className="inline-flex items-center px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-white/5 border border-border/40">
+                                    <span className="text-[8px] font-black text-zinc-500 uppercase tracking-tighter">{typeLabel}</span>
+                                  </div>
+                                )}
                               </td>
                               <td className="px-3 py-3 text-right">
                                 {isEditing && <DeleteProductButton id={p.id} isAdmin={isAdmin} />}
@@ -430,12 +592,7 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
                       />
                     )}
                     
-                    {/* Compact Price Badge */}
-                    <div className="absolute bottom-1 right-1 sm:top-2 sm:left-2 bg-white/90 dark:bg-black/80 backdrop-blur-md px-1.5 py-0.5 rounded-md border border-white/20 shadow-sm">
-                      <span className="text-[8px] sm:text-[10px] font-black tracking-tighter text-primary">
-                        {Number(p.currentPrice).toLocaleString()}₫
-                      </span>
-                    </div>
+
 
                     {/* Compact Selection Visual */}
                     {isEditing && isSelected && (
@@ -449,20 +606,16 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
                     {/* Quick Upload / Delete Overlay */}
                     {isEditing && (
                       <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2" onClick={(e) => e.stopPropagation()}>
-                         <UploadButton
-                            endpoint="productImage"
-                            onBeforeUploadBegin={async (files) => {
-                              return await Promise.all(files.map(f => optimizeImageToWebp(f)));
-                            }}
-                            onClientUploadComplete={(res) => {
-                              const url = res[0]?.ufsUrl || res[0]?.url;
-                              if (url) handleChange(p.id, "imageUrl", url);
-                            }}
-                            content={{
-                              button() { return <div className="flex flex-col items-center gap-1"><ImageIcon className="h-5 w-5 text-white" /><span className="text-[8px] font-bold text-white uppercase">Ảnh</span></div>; }
-                            }}
-                            appearance={{ button: "bg-primary/80 backdrop-blur-md rounded-xl h-12 w-12 border-none" }}
-                         />
+                         <CustomImageUpload
+                            onUploadComplete={(url) => handleChange(p.id, "imageUrl", url)}
+                            onError={(err) => alert(err)}
+                            className="bg-primary/80 backdrop-blur-md rounded-xl h-12 w-12 border-none text-white hover:bg-primary transition-colors"
+                         >
+                            <div className="flex flex-col items-center gap-1">
+                               <ImageIcon className="h-5 w-5 text-white" />
+                               <span className="text-[8px] font-bold text-white uppercase">Ảnh</span>
+                            </div>
+                         </CustomImageUpload>
                          <DeleteProductButton id={p.id} isAdmin={isAdmin} />
                       </div>
                     )}
@@ -525,6 +678,13 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
           </div>
         )}
       </div>
+
+      {/* Global Datalist for Dimension Suggestions */}
+      <datalist id="dimension-suggestions">
+        {dimensionSuggestions.map((s) => (
+          <option key={s} value={s} />
+        ))}
+      </datalist>
     </div>
   );
 }

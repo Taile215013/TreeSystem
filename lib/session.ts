@@ -23,6 +23,7 @@ export async function getUserSession() {
     return {
       id: user.id,
       username: user.username,
+      role: user.role,          // "admin" | "staff" | "customer"
       displayName: user.fullName,
       avatarUrl: user.avatarUrl,
       coverUrl: user.coverUrl,
