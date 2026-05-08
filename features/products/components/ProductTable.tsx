@@ -295,7 +295,7 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
                           const img = current.imageUrl || p.imageUrl;
 
                           return (
-                            <tr key={p.id} className={`group/row transition-all duration-300 ${isSelected ? 'bg-primary/10' : 'hover:bg-primary/5'}`}>
+                            <tr key={p.id} id={`product-${p.id}`} className={`group/row transition-all duration-300 ${isSelected ? 'bg-primary/10' : 'hover:bg-primary/5'}`}>
                               <td className="px-3 py-3 text-center">
                                 <Checkbox checked={isSelected} onCheckedChange={() => toggleSelect(p.id)} disabled={!isEditing} />
                               </td>
@@ -411,6 +411,7 @@ export function ProductTable({ products: initialProducts, isAdmin }: ProductTabl
               return (
                 <div 
                   key={p.id} 
+                  id={`product-${p.id}`}
                   className={`group relative bg-white dark:bg-zinc-900 border ${isSelected ? 'border-primary ring-2 ring-primary/20' : 'border-border/40'} rounded-2xl sm:rounded-[2rem] overflow-hidden hover:shadow-lg transition-all duration-500 flex flex-col ${isEditing ? 'cursor-pointer active:scale-95' : 'cursor-default'}`} 
                   onClick={() => isEditing && toggleSelect(p.id)}
                 >

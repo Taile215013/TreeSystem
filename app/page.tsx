@@ -1,11 +1,19 @@
 import Header from "@/components/layout/Header";
-import { ShieldCheck, Sprout, Wind, ArrowRight, ShoppingBag, Leaf } from "lucide-react";
+import { ShieldCheck, Sprout, Wind, ArrowRight, ShoppingBag, Leaf, DatabaseZap } from "lucide-react";
 import { db } from "@/db";
 import { products } from "@/db/schema";
 import Image from "next/image";
 
 export default async function Home() {
-  const allProducts = await db.select().from(products);
+  let allProducts: typeof products.$inferSelect[] = [];
+  let dbError = false;
+
+  try {
+    allProducts = await db.select().from(products);
+  } catch (error) {
+    console.error("Database connection error on Home page:", error);
+    dbError = true;
+  }
 
   return (
     <div className="min-h-screen bg-black text-zinc-50 font-sans selection:bg-emerald-500/30 overflow-x-hidden relative">
@@ -59,7 +67,18 @@ export default async function Home() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {allProducts.length === 0 ? (
+              {dbError ? (
+                <div className="col-span-full flex flex-col items-center justify-center py-20 px-4 text-center bg-red-500/5 border border-red-500/20 rounded-2xl">
+                  <div className="h-16 w-16 rounded-full bg-red-500/10 flex items-center justify-center text-red-500 mb-4">
+                    <DatabaseZap className="h-8 w-8" />
+                  </div>
+                  <h3 className="text-xl font-bold text-red-400 mb-2">Mất kết nối cơ sở dữ liệu</h3>
+                  <p className="text-zinc-400 max-w-lg mx-auto leading-relaxed">
+                    Hệ thống không thể tải danh sách sản phẩm do lỗi kết nối Database. <br/>
+                    Vui lòng kiểm tra xem service PostgreSQL đã được khởi chạy chưa, hoặc xem lại biến môi trường <code>DATABASE_URL</code> trong file <code>.env</code>.
+                  </p>
+                </div>
+              ) : allProducts.length === 0 ? (
                 <div className="col-span-full text-center py-20 text-zinc-500">
                   Shop is currently empty. Visit the Admin Dashboard to add plants.
                 </div>

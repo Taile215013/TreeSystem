@@ -1,5 +1,7 @@
 import { productService } from "@/features/products/services/product.service";
 import { checkIsAdminAction } from "@/features/products/actions/product.actions";
+
+export const dynamic = 'force-dynamic';
 import { ProductsDashboardClient } from "@/features/products/components/ProductsDashboardClient";
 import { Package, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";

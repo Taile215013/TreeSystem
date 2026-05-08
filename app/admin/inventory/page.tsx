@@ -1,5 +1,7 @@
 import { getInventoryAction } from "@/features/inventory/actions/inventory.actions";
 import InventoryTable from "@/features/inventory/components/InventoryTable";
+
+export const dynamic = 'force-dynamic';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 

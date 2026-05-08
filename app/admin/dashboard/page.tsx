@@ -1,5 +1,7 @@
 import { getDashboardDataAction } from "@/features/dashboard/actions/dashboard.actions";
 import DashboardContent from "./Dashboard";
+
+export const dynamic = 'force-dynamic';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 

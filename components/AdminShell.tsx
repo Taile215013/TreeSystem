@@ -8,6 +8,8 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { cn } from "@/lib/utils";
 import { adminNavGroups, isAdminNavActive } from "@/lib/admin-nav";
 import { performClientLogout } from "@/lib/auth-client";
+import { AdminNotificationBell } from "./admin/AdminNotificationBell";
+import { useAdminNotification } from "@/lib/stores/admin-notification";
 
 export function AdminShell({
   children,
@@ -22,6 +24,7 @@ export function AdminShell({
   const [isResizing, setIsResizing] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
+  const { clearNotifications } = useAdminNotification();
 
   const avatarChar = (displayName || username || "?").charAt(0).toUpperCase();
 
@@ -48,7 +51,8 @@ export function AdminShell({
 
   useEffect(() => {
     setMobileOpen(false);
-  }, [pathname]);
+    clearNotifications();
+  }, [pathname, clearNotifications]);
 
   const isCollapsed = sidebarWidth < 120;
 
@@ -177,6 +181,7 @@ export function AdminShell({
           </div>
 
           <div className="flex items-center gap-2 sm:gap-4">
+            <AdminNotificationBell />
             <ThemeToggle />
             <div className="hidden h-4 w-px bg-border/50 sm:block" />
             <span className="hidden max-w-[120px] truncate text-[11px] font-bold uppercase tracking-wider text-muted-foreground sm:inline">

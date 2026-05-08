@@ -1,6 +1,8 @@
 import { getWarehouseFormDataAction, getWarehouseHistoryAction } from "@/features/warehouse/actions/warehouse.actions";
 import WarehouseForm from "./WarehouseForm";
 import WarehouseHistory from "./WarehouseHistory";
+
+export const dynamic = 'force-dynamic';
 import { Badge } from "@/components/ui/badge";
 
 export default async function WarehousePage() {

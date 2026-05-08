@@ -5,6 +5,7 @@ import { ProductTable, Product } from "./ProductTable";
 import { ProductForm } from "./ProductForm";
 import { Package, Plus, ChevronRight, ChevronLeft, PanelRightClose, PanelRightOpen, ArrowLeft, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAdminNotification } from "@/lib/stores/admin-notification";
 
 interface ProductsDashboardClientProps {
   allProducts: Product[];
@@ -14,6 +15,8 @@ interface ProductsDashboardClientProps {
 export function ProductsDashboardClient({ allProducts, isAdmin }: ProductsDashboardClientProps) {
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+
+  const { addNotification } = useAdminNotification();
 
   useEffect(() => {
     const checkScreen = () => {
@@ -25,6 +28,41 @@ export function ProductsDashboardClient({ allProducts, isAdmin }: ProductsDashbo
     window.addEventListener("resize", checkScreen);
     return () => window.removeEventListener("resize", checkScreen);
   }, []);
+
+  // Quét danh sách sản phẩm để tìm cảnh báo
+  useEffect(() => {
+    if (!allProducts || allProducts.length === 0) return;
+
+    // Quét thiếu ảnh
+    const missingImageProducts = allProducts.filter(p => !p.imageUrl);
+    if (missingImageProducts.length > 0) {
+      missingImageProducts.forEach(p => {
+        addNotification({
+          id: `missing-image-${p.id}`,
+          type: "warning",
+          title: "Thiếu hình ảnh",
+          description: `Sản phẩm "${p.name}" chưa có hình ảnh. Cần bổ sung để hiển thị tốt hơn.`,
+          elementId: `product-${p.id}`,
+          action: { label: "Sửa ngay", onClick: () => {} },
+        });
+      });
+    }
+
+    // Quét thiếu danh mục
+    const missingCategoryProducts = allProducts.filter(p => !p.categoryId);
+    if (missingCategoryProducts.length > 0) {
+      missingCategoryProducts.forEach(p => {
+        addNotification({
+          id: `missing-category-${p.id}`,
+          type: "error",
+          title: "Thiếu danh mục",
+          description: `Sản phẩm "${p.name}" chưa được phân loại vào danh mục nào.`,
+          elementId: `product-${p.id}`,
+          action: { label: "Kiểm tra", onClick: () => {} },
+        });
+      });
+    }
+  }, [allProducts, addNotification]);
 
   return (
     <div className="flex flex-col xl:flex-row gap-4 md:gap-8 items-start relative min-h-screen max-w-[1600px] mx-auto px-0.5 sm:px-4">
